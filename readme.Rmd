@@ -1,0 +1,428 @@
+---
+author: "Marcos Gahan Agote"
+output: html_document
+---
+
+# <span style="color:#81d4fa">**Google Data Analytics Course Capstone**</span>
+#### <span style="color:#81d4fa">***by Marcos Gahan***</span>
+## Case Study: How Does a Bike-Share Navigate Speedy Success?
+![](C:/Users/Marcos/Desktop/trip-data/Cyclistic logo 2022-10-09 182038.jpg){#id .class width=100px height=100px }  
+
+
+## Ask Phase
+
+<br>
+
+#### **Background info**
+
+* You are a junior data analyst working in the marketing analyst team at *Cyclistic*, a bike-share company in Chicago. In 2016, *Cyclistic* launched a successful bike-share offering. Since then, the program has grown to a fleet of 5,824 bicycles that
+are geotracked and locked into a network of 692 stations across Chicago. The bikes can be unlocked from one station and
+returned to any other station in the system anytime.
+
+* Until now, *Cyclistic*’s marketing strategy relied on building general awareness and appealing to broad consumer segments.
+One approach that helped make these things possible was the flexibility of its pricing plans: single-ride passes, full-day passes,
+and annual memberships. Customers who purchase single-ride or full-day passes are referred to as casual riders. Customers
+who purchase annual memberships are *Cyclistic* members.
+*Cyclistic*’s finance analysts have concluded that annual members are much more profitable than casual riders. Although the
+pricing flexibility helps *Cyclistic* attract more customers, Moreno believes that maximizing the number of annual members will
+be key to future growth. Rather than creating a marketing campaign that targets all-new customers, Moreno believes there is a
+very good chance to convert casual riders into members. She notes that casual riders are already aware of the *Cyclistic*
+program and have chosen *Cyclistic* for their mobility needs.
+
+* The aim is to design marketing strategies aimed at converting casual riders into annual members. In order to
+do that, however, the marketing analyst team needs to better understand how annual members and casual riders differ, why
+casual riders would buy a membership, and how digital media could affect their marketing tactics. Moreno and her team are
+interested in analyzing the *Cyclistic* historical bike trip data to identify trends. **Your task is to understand the difference between casual and annual members.**
+
+#### **Key stakeholders**
+
+* **Lily Moreno:** The director of marketing and your manager. Moreno is responsible for the development of campaigns
+and initiatives to promote the bike-share program. These may include email, social media, and other channels.
+* ***Cyclistic* marketing analytics team:** A team of data analysts who are responsible for collecting, analyzing, and
+reporting data that helps guide *Cyclistic* marketing strategy. You joined this team six months ago and have been busy
+learning about *Cyclistic*’s mission and business goals — as well as how you, as a junior data analyst, can help *Cyclistic*
+achieve them.
+* ***Cyclistic* executive team:** The notoriously detail-oriented executive team will decide whether to approve the
+recommended marketing program.
+
+#### **Deliverables**
+
+* A clear statement of the business task  
+* A description of all data sources used  
+* Documentation of any cleaning or manipulation of data  
+* A summary of the analysis  
+* Supporting visualizations and key findings
+* Recommendations based on the analysis  
+
+#### **Business task**
+
+The goal is to **find the difference between annual members and casual riders use of *Cyclistic* bikes**
+  
+
+#### **Data Source**
+
+<span style="color:grey">- Last 12 months of *Cyclistic*’s historical trips database: *Index of bucket "divvy-tripdata"*. Here's the [link](https://divvy-tripdata.s3.amazonaws.com/index.html)</span>
+<br>
+
+## Prepare Phase
+<br>
+
+#### **About the data source**
+
+##### Does the data **ROCCC**?  
+
+**- Reliability:**: <span style='color:green'>**True**</span> - Data frames contains every trip within the period chosen with complete information. This means it's accurate and not biased.  
+**- Original:** <span style='color:green'>**True**</span> - The data is provided by the company  
+**- Comprehensive:** <span style='color:green'>**True**</span> - It contains relevant information   
+**- Current:** <span style='color:green'>**True**</span> - Contains data from the last 12 months  
+**- Cited:** The data is fictional so It's not necessary. 
+
+
+All the data frames from the last 12 months are merged into one. Resulting in a data frame with 2,825,051 rows.
+For storage and computer capacity reasons I'm going to use a sample with 500,000 rows (confidence level: 99% and margin of error: 0,01%) 
+
+```{r echo = T, results = 'hide',message=FALSE}
+setwd("C:/Users/Marcos/Desktop/trip-data")
+
+  library(tidyverse)
+  library(lubridate)
+  library(janitor)
+  library(knitr)
+  library(ggplot2)
+
+  a <- read_csv("202109-divvy-tripdata.csv")
+  b <- read_csv("202110-divvy-tripdata.csv")
+  c <- read_csv("202111-divvy-tripdata.csv")
+  d <- read_csv("202112-divvy-tripdata.csv")
+  e <- read_csv("202201-divvy-tripdata.csv")
+  f <- read_csv("202201-divvy-tripdata.csv")
+  g <- read_csv("202201-divvy-tripdata.csv")
+  h <- read_csv("202201-divvy-tripdata.csv")
+  i <- read_csv("202201-divvy-tripdata.csv")
+  j <- read_csv("202201-divvy-tripdata.csv")
+  k <- read_csv("202201-divvy-tripdata.csv")
+  l <- read_csv("202201-divvy-tripdata.csv")
+  
+  trips_data <- rbind(a,b,c,d,e,f,g,h,i,j,k,l)
+  sample_trips_data <- sample_n(trips_data,500000)
+  rm(trips_data,a,b,c,d,e,f,g,h,i,j,k,l)
+  
+```
+<br>
+
+## Cleaning Phase
+<br>
+
+#### **Cleaning and Manipulation** 
+
+Let's start cleaning and checking for errors.
+
+```{r echo = T, results = 'hide',message=FALSE}
+  rename_with(sample_trips_data,tolower)
+  clean_names(sample_trips_data)
+```
+
+```{r}
+sapply(sample_trips_data, function(x) sum(is.na(x)))
+```
+
+Now we check if all the columns data types are correct
+```{r}
+glimpse(sample_trips_data)
+```
+
+Everything seems good meaning we can start  analyzing.
+
+**Notes**:  
+-About <span style="color:red">**17%**</span> of the rows have the station name column with a NA value.   
+-About <span style="color:red">**0,6%**</span> of coordinates have null values 
+
+<br>
+
+## Analyze phase
+
+<br>
+
+#### **A summary of my analysis**
+
+For my analysis, I focused on the trip duration, the difference in bike usage, the use depending on the day and on each hour of the day and the geography of each trip.
+
+The first thing I did is to calculate the time difference between the start of the trip and the end.
+
+```{r}
+#Let's create a new row with the trip length in minutes
+
+sample_trips_data$trip_duration_in_mins <- difftime(sample_trips_data$ended_at,sample_trips_data$started_at, units = "mins")
+sample_trips_data$trip_duration_in_mins <- round(sample_trips_data$trip_duration_in_mins, digits = 0)
+
+
+kable(head(sort(sample_trips_data$trip_duration_in_mins*-1)*-1),decreasing = TRUE, format = "markdown")
+
+```
+
+-Some of the trips are very long and make the data biases. Let's leave them out and focus on trips smaller than 120 minutes. We then create the data frame.
+
+```{r}
+# We remove trips longer than 2 hours and then create the df.
+
+duration_trips_data <- sample_trips_data %>% 
+  filter(trip_duration_in_mins < 120)
+  
+a <- duration_trips_data %>% 
+  select(member_casual,trip_duration_in_mins) %>%
+  group_by(member_casual) %>% 
+  summarise(avg_duration = round(mean(trip_duration_in_mins), digits = 0))
+
+b <- duration_trips_data %>%
+  select(member_casual,trip_duration_in_mins) %>%
+  group_by(member_casual) %>%
+  count(member_casual) %>%
+  rename(amount = n)
+
+member_casual_vs_durationdf <-  inner_join(b,a, by = "member_casual")
+
+
+kable(head(member_casual_vs_durationdf[,1:3]), format = "markdown")
+
+```
+
+**Notes**:    
+- Members tend to do 42% shorter trips in average than a casual user. 
+
+<br>
+
+Let's keep digging in order to create a scatter plot. 
+```{r}
+
+# You will understand the reason of this chunck once you see the chart.
+# We remove stations with less than 7 trips to not make it biased.
+
+
+a <- duration_trips_data %>% 
+  select(start_station_name,trip_duration_in_mins) %>% 
+  group_by(start_station_name) %>% 
+  summarise(avg_duration = mean(trip_duration_in_mins)) %>%
+  arrange(avg_duration*-1)
+
+b <- duration_trips_data %>%
+  select(start_station_name,trip_duration_in_mins,member_casual) %>%
+  group_by(start_station_name) %>%
+  count(start_station_name) %>%
+  rename(amount = n)
+
+c <- duration_trips_data %>% 
+  select(start_station_name,member_casual) %>%
+  filter(member_casual == "member") %>%
+  group_by(start_station_name) %>%
+  count(member_casual)
+
+duration_vs_station <- inner_join(b,inner_join(c,a,by = "start_station_name"), by = "start_station_name")
+duration_vs_station$percentage_of_members <- (duration_vs_station$n*100)/duration_vs_station$amount
+
+duration_vs_station <- duration_vs_station %>%
+  arrange(avg_duration*-1) %>%
+  filter(n > 50)
+
+kable(head(duration_vs_station[,1:6]), format = "markdown")
+
+```
+
+-We now analyze which type of bike each type of user uses the most.
+
+```{r}
+casual_vs_members_rideabletype <- sample_trips_data %>%
+  select(rideable_type,member_casual) %>%
+  group_by(rideable_type) %>%
+  count(member_casual) %>%
+  mutate(percentage = (n * 100)/ 500000) %>%
+  rename(amount = n)
+
+amount_of_members = 331422
+amount_of_casuals = 164849
+
+rideabletype_members <- casual_vs_members_rideabletype %>%
+  filter(member_casual == "member") %>%
+  mutate(percentage = (amount * 100)/ amount_of_members) %>%
+  arrange(percentage*-1)
+
+rideabletype_casuals <- casual_vs_members_rideabletype %>%
+  filter(member_casual == "casual") %>%
+  mutate(percentage = (amount * 100)/ amount_of_casuals) %>%
+  arrange(percentage*-1)
+
+kable(head(rideabletype_members[,1:4]), format = "markdown")
+kable(head(rideabletype_casuals[,1:4]), format = "markdown")
+```
+**Notes**:    
+Members prefer classic bikes while casuals prefer electric bikes.
+
+<br>
+
+-The next step is to check in which days of the week each user are more active.
+
+```{r}
+# The variation in the weekly basis use of each type of user.
+
+sample_trips_data$day_of_the_week <- wday(sample_trips_data$started_at, week_start=1)
+
+days_of_the_Week <- list("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+weekly_members_use <-  sample_trips_data %>%
+  select(member_casual,day_of_the_week) %>%
+  filter(member_casual == "member") %>%
+  group_by(day_of_the_week) %>%
+  count(member_casual) %>%
+  rename(amount = n) %>%
+  mutate(percentage = (amount*100)/amount_of_members) %>% 
+  arrange(day_of_the_week)
+weekly_members_use$day <- c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+
+weekly_casuals_use <-  sample_trips_data %>%
+  select(member_casual,day_of_the_week) %>%
+  filter(member_casual == "casual") %>%
+  group_by(day_of_the_week) %>%
+  count(member_casual) %>%
+  rename(amount = n) %>%
+  mutate(percentage = (amount*100)/amount_of_casuals)
+weekly_casuals_use$day <- c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+
+kable(head(weekly_members_use[,1:5]), format = "markdown")
+kable(head(weekly_casuals_use[,1:5]), format = "markdown")
+```
+
+**Notes:**  
+- Casuals are more active in weekends and members are evenly distributed throughout the week.  
+
+<br>
+
+-We proceed to analyze in which hours members and casuals use Cyclistic bikes the most.
+
+
+```{r}
+
+sample_trips_data$hour <- format(as.POSIXct(sample_trips_data$started_at), format = "%H")
+
+daily_members_use <-  sample_trips_data %>%
+  select(member_casual,hour) %>%
+  filter(member_casual == "member") %>%
+  group_by(hour) %>%
+  count(member_casual) %>%
+  rename(amount = n) %>%
+  mutate(percentage = (amount*100)/amount_of_members) %>%
+  arrange(percentage*-1)
+
+daily_casuals_use <-  sample_trips_data %>%
+  select(member_casual,hour) %>%
+  filter(member_casual == "casual") %>%
+  group_by(hour) %>%
+  count(member_casual) %>%
+  rename(amount = n) %>%
+  mutate(percentage = (amount*100)/amount_of_casuals) %>%
+  arrange(percentage*-1)
+
+
+
+kable(head(daily_members_use[,1:4]), format = "markdown")
+kable(head(daily_casuals_use[,1:4]), format = "markdown")
+```
+
+**Notes:**  
+- While members are more evenly distributed throughout, casuals users are more concentrated in the afternoon.  
+- Members usage peaks at the beggining and at the end of working hours (9am-5pm). Also at 12 am, when it's lunch time.
+
+<br>
+
+## Visualization phase
+
+
+<br>
+
+#### **R**
+
+##### The relationship between a trip duration and the likelihood of being a member.
+
+```{r}
+
+ggplot(duration_vs_station, aes(x=avg_duration, y=percentage_of_members)) +
+  geom_point(color="#7895B2") +
+  geom_smooth(fill = "#7895B2") +
+  xlab("Average Trip Duration in minutes") +
+  ylab("Percentage of members %") +
+  labs(title = "Trip duration chart", subtitle = "Percentage of members vs average trip duration in each station") +
+  theme(axis.title = element_text(color = "#7895B2",size = 14), 
+        plot.title = element_text(size = 28, color = "#7895B2"),
+        plot.subtitle = element_text(size = 14, color = "#AEBDCA"),
+        axis.text = element_text(color = "#7895B2",size = 12), 
+        panel.background = element_rect(fill = "#F5EFE6"),
+        panel.grid = element_line(color = 'grey', linetype = 'dotted')
+  ) +
+  xlim(7, 30)
+```
+
+The longer the trip, the lower the percentage of members will be.
+
+```{r}
+# We calculate the correlation coefficient between the two vectors.
+
+print(cor(as.numeric(duration_vs_station$avg_duration),duration_vs_station$percentage_of_members))
+```
+-**Result: <span style="color:darkgreen">Moderate correlation</span>**
+
+<br>
+
+#### **Tableau**
+
+You can click this **[link](https://public.tableau.com/app/profile/marcos.gahan)** to see all the interactive charts. 
+
+<br>
+
+##### **In which places each type of user is more frequent?** - [Tableau link](https://public.tableau.com/app/profile/marcos.gahan/viz/GeographicdistributionofCyclisitcusers/Sheet1)
+![](Geo_members_chart.jpg){#id .class width=767px height=626px} 
+
+-Casual trips are more focused on the tourist side of the city while member in the business side.
+
+<br>
+
+##### **Weekly distribution** - [Tableau link](https://public.tableau.com/app/profile/marcos.gahan/viz/Cyclistic-Weeklydistribution/Dashboard1)
+
+![](Weekly_distribution.jpg){#id .class width=767px height=626px} 
+
+Casual trips increase on weekends while member trips are evenly distributed throughout the laboral and decrease on weekends.
+
+<br>
+
+##### **Daily distribution** - [Tableau link](https://public.tableau.com/app/profile/marcos.gahan/viz/Cyclistic-DailyDistribution/Dashboard1)
+
+![](Daily distribution.png){#id .class width=767px height=626px}   
+- Members usage increase at the beggining and ending of working hours (8am-5pm).
+
+<br>
+
+##### **Rideable type** - [Tableau link](https://public.tableau.com/app/profile/marcos.gahan/viz/Cyclistic-Rideabletype/Dashboard1)
+
+![](Rideable type.png){#id .class width=767px height=626px}   
+- There are no significant differences but members use Classic Bikes a 13% more than casuals.
+
+<br>
+
+## Act phase
+
+<br>
+
+### Findings
+
+* Members tend to do shorter trips.
+* Casual trips are more focused on the tourist side of the city while member in the business side.
+* Casual trips increase on weekends while member trips are evenly distributed throughout the work days and decrease on weekends.
+* Members usage increase at the beggining and ending of working hours (8am-5pm).
+* There are no significant differences in the rideable type preferences but members use classic bikes 13% more than casuals.  
+**Key finding:** Casual riders mostly use bikes for recreational purposes while members to go to their jobs. It may be very difficult to turn a casual user to member if the reason of the trip is recreational (which are concentrated on the tourist side of cities). 
+
+### Recommendations
+
+-Focus more marketing campaigns on the business side of the city, where casuals are more likely to turn into members.
+
+-Users who frequent touristic zones may be more interested in a Weekend subscription.
+
+-Offer discounts or benefits on Monday to Friday trips to attract users who make casual trips to go work. 
+
+<br>
