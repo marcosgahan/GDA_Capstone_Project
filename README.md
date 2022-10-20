@@ -1,4 +1,4 @@
-# Google Data Analytics Course Capstone *by Marcos Gahan*
+# Google Data Analytics Course Project Capstone *by Marcos Gahan*
 ## Cyclistic Case study
 ![](https://miro.medium.com/max/293/1*nPqUTH1pkj8BWtQrd8WYIg.png)
 
