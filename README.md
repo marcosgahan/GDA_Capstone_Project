@@ -3,5 +3,5 @@
 ![](https://miro.medium.com/max/293/1*nPqUTH1pkj8BWtQrd8WYIg.png)
 
 ### Click here:
-### [Cyclistic case study R Markdown]([https://rpubs.com/marcosgahan/991488](https://rpubs.com/marcosgahan/1116100)https://rpubs.com/marcosgahan/1116100)
+### [Cyclistic case study R Markdown]([https://rpubs.com/marcosgahan/991488](https://rpubs.com/marcosgahan/1116100)
 
